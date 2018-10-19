@@ -19,7 +19,7 @@ namespace Users
      */
     public class Startup
     {
-        public Startup(IConfiguration configuration) => configuration = configuration;
+        public Startup(IConfiguration configuration) => Configuration = configuration;
 
         public IConfiguration Configuration { get; }
 
