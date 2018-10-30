@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Users.Infrastructure;
 using Users.Models;
 
 namespace Users
@@ -25,6 +26,8 @@ namespace Users
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddTransient<IPasswordValidator<AppUser>, Infrastructure.CustomPasswordValidator>();
+            services.AddTransient<IUserValidator<AppUser>, CustomUserValidator>();
             // AddDbContext:    Fügt Dienste des Entity Framework hinzu. Fügt die Contextklasse der SQL-Datenbank hinzu.
             //                  Die SQL-Datenbank wird über die appsettings und deren Contextstring verbunden.
             // UseSqlServer:    Fügt die Unterstützung von Microsoft SQL Server zum speichern von Daten hinzu.
@@ -33,7 +36,17 @@ namespace Users
             // AddIdentity:     Konfiguriert die für den Identitydienst nötigen Parameter. Klassen für User und Rollen.
             //                  Es wird festgelegt das EF Core zum speichern und lesen der Daten genutzt wird. (AddEntityFrameworkStores<Kontextklasse>)
             //                  AddDefaultTokenProviders fügt eine Tokenfunktionalität hinzu die z.B. für das ändern des Passwortes benötigt wird.
-            services.AddIdentity<AppUser, IdentityRole>().AddEntityFrameworkStores<AppIdentityDbContext>().AddDefaultTokenProviders();
+            //                  opts.Password.RequiredLength Passwortoptionen/anforderungen z.B. Passwortlänge
+            services.AddIdentity<AppUser, IdentityRole>(opts =>
+            {
+                opts.User.RequireUniqueEmail = true;
+                //opts.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyz";
+                opts.Password.RequiredLength = 6;
+                opts.Password.RequireNonAlphanumeric = false;
+                opts.Password.RequireLowercase = false;
+                opts.Password.RequireUppercase = false;
+                opts.Password.RequireDigit = false;
+            }).AddEntityFrameworkStores<AppIdentityDbContext>().AddDefaultTokenProviders();
 
             services.AddMvc();
         }
