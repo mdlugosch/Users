@@ -47,6 +47,7 @@ namespace Users
                 opts.Password.RequireUppercase = false;
                 opts.Password.RequireDigit = false;
             }).AddEntityFrameworkStores<AppIdentityDbContext>().AddDefaultTokenProviders();
+            //services.ConfigureApplicationCookie(opts => opts.LoginPath = "/Users/Login");
 
             services.AddMvc();
         }
@@ -59,6 +60,7 @@ namespace Users
             // Mit UseAuthentication sind Bentuzerdaten nicht mehr im Http-Request enthalten.
             app.UseAuthentication();
             app.UseMvcWithDefaultRoute();
+            AppIdentityDbContext.CreateAdminAccount(app.ApplicationServices, Configuration).Wait();
         }
     }
 }
