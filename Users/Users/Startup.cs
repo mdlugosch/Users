@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -28,6 +29,9 @@ namespace Users
         {
             services.AddTransient<IPasswordValidator<AppUser>, Infrastructure.CustomPasswordValidator>();
             services.AddTransient<IUserValidator<AppUser>, CustomUserValidator>();
+
+            // Für das ClaimBeispiel eine neue Claimsquelle registrieren
+            services.AddSingleton<IClaimsTransformation, LocationClaimsProvider>();
             // AddDbContext:    Fügt Dienste des Entity Framework hinzu. Fügt die Contextklasse der SQL-Datenbank hinzu.
             //                  Die SQL-Datenbank wird über die appsettings und deren Contextstring verbunden.
             // UseSqlServer:    Fügt die Unterstützung von Microsoft SQL Server zum speichern von Daten hinzu.
@@ -60,7 +64,8 @@ namespace Users
             // Mit UseAuthentication sind Bentuzerdaten nicht mehr im Http-Request enthalten.
             app.UseAuthentication();
             app.UseMvcWithDefaultRoute();
-            AppIdentityDbContext.CreateAdminAccount(app.ApplicationServices, Configuration).Wait();
+            // DataSeeding for AdminAccount
+            //AppIdentityDbContext.CreateAdminAccount(app.ApplicationServices, Configuration).Wait();
         }
     }
 }
