@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -32,6 +34,35 @@ namespace Users
 
             // Für das ClaimBeispiel eine neue Claimsquelle registrieren
             services.AddSingleton<IClaimsTransformation, LocationClaimsProvider>();
+
+            // Eigenen Richtlinienhandler implementieren
+            services.AddTransient<IAuthorizationHandler, BlockUsersHandler>();
+
+            // Richtlinienhandler für Ressourcen implementieren
+            services.AddTransient<IAuthorizationHandler, DocumentAuthorizationHandler>();
+
+            // Hinzufügen einer Richtlinie (Policy) für die Authentifizierung
+            services.AddAuthorization(opts =>
+            {
+                opts.AddPolicy("DCUsers", policy =>    // Standartrichtlinie hinzufügen
+                {
+                    policy.RequireRole("Users");
+                    policy.RequireClaim(ClaimTypes.StateOrProvince, "DC");
+                });
+                opts.AddPolicy("NotBob", policy =>    // Benutzerdefinierte Richtlinie hinzufügen
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.AddRequirements(new BlockUsersRequirement("Bob"));
+                });
+                opts.AddPolicy("AuthorsAndEditors", policy =>
+                {
+                    policy.AddRequirements(new DocumentAuthorizationRequirement
+                    {
+                        AllowAuthors = true,
+                        AllowEditors = true
+                    });
+                });
+            });
             // AddDbContext:    Fügt Dienste des Entity Framework hinzu. Fügt die Contextklasse der SQL-Datenbank hinzu.
             //                  Die SQL-Datenbank wird über die appsettings und deren Contextstring verbunden.
             // UseSqlServer:    Fügt die Unterstützung von Microsoft SQL Server zum speichern von Daten hinzu.
